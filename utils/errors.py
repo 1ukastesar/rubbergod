@@ -17,3 +17,17 @@ class ApiError(commands.CommandError):
 
     def __init__(self, error: str) -> None:
         self.message = Messages.api_error(error=error)
+
+
+class PermissionError(commands.CommandError):
+    """An error indicating that the user doesn't have the required permissions."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
+class InvalidRoomError(commands.CommandError):
+    """An error indicating that this interaction is only possible in given room."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message

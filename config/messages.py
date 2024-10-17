@@ -38,7 +38,7 @@ class Messages(metaclass=Formatable):
     submod_plus_only = "Na tohle mají práva jen Submod+. <:KKomrade:484470873001164817>"
     mod_plus_only = "Na tohle mají práva jen Mod+. <:KKomrade:484470873001164817>"
     bot_admin_only = "Na tohle mají práva jen Admin. <:KKomrade:484470873001164817>"
-    vote_room_only = "Tohle funguje jen v {room}."
+    specific_room_only = "Tohle funguje jen v <#{room}>."
     guild_only = "Tento příkaz lze použít pouze na serveru."
     bot_room_redirect = "{user} <:sadcat:576171980118687754> 👉 " \
                         "<#{bot_room}>\n"

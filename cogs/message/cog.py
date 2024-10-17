@@ -6,9 +6,9 @@ import disnake
 from disnake.ext import commands
 
 from cogs.base import Base
-from permissions import permission_check
 from rubbergod import Rubbergod
 from utils import cooldowns
+from utils.checks import PermissionsCheck
 
 from .messages_cz import MessagesCZ
 from .modals import MessageModal
@@ -19,7 +19,7 @@ class Message(Base, commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.check(permission_check.submod_plus)
+    @PermissionsCheck.is_submod_plus()
     @cooldowns.default_cooldown
     @commands.slash_command(name="message")
     async def message(self, inter: disnake.ApplicationCommandInteraction):

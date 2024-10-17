@@ -18,10 +18,10 @@ from cogs.gif.features import ImageHandler
 from config.app_config import config
 from config.messages import Messages
 from database import session
-from database.error import ErrorLogDB, ErrorRow
+from database.error import ErrorLogDB
 from database.stats import ErrorEvent
-from permissions import custom_errors, permission_check
 from rubbergod import Rubbergod
+from utils import errors
 
 rubbegod_logger = logging.getLogger("rubbergod")
 
@@ -110,21 +110,6 @@ class ErrorLogger:
             output = "".join(traceback.format_exception(type(error), error, error.__traceback__))
             rubbegod_logger.warning(output)
 
-    def log_error_time(self, set=True) -> int:
-        """Log details of last exception and return number of days since last exception"""
-        try:
-            today = datetime.date.today()
-            last_exception = ErrorLogDB.get(ErrorRow.last_error)
-            if last_exception:
-                count = (today - last_exception.date).days
-            else:
-                count = 0
-            if set:
-                ErrorLogDB.set()
-            return count
-        except Exception:
-            return 0
-
     def create_embed(
         self,
         command: str,
@@ -134,7 +119,8 @@ class ErrorLogger:
         jump_url: str | None,
         extra_fields: dict[str, str] = None,
     ):
-        count = self.log_error_time()
+        count = ErrorLogDB.days_without_error()
+        ErrorLogDB.set()
         embed = disnake.Embed(
             title=f"{count} days without an accident.\nIgnoring exception in {command}",
             color=0xFF0000,
@@ -375,10 +361,9 @@ class ErrorLogger:
             return True
 
         if (
-            isinstance(error, permission_check.NotHelperPlusError)
-            or isinstance(error, permission_check.NotSubmodPlusError)
-            or isinstance(error, permission_check.NotModPlusError)
-            or isinstance(error, permission_check.NotAdminError)
+            isinstance(error, errors.PermissionError)
+            or isinstance(error, errors.InvalidRoomError)
+            or isinstance(error, errors.ApiError)
         ):
             await ctx.send(error.message)
             return True
@@ -389,10 +374,6 @@ class ErrorLogger:
 
         if isinstance(error, commands.MemberNotFound):
             await ctx.send(Messages.member_not_found(member=ctx.author.mention))
-            return True
-
-        if isinstance(error, custom_errors.ApiError):
-            await ctx.send(error.message)
             return True
 
         # LEGACY COMMANDS
@@ -427,7 +408,7 @@ class ErrorLogger:
                     await ctx.send(Messages.blocked_bot(user=inter.author.id))
                     return True
 
-        if isinstance(error, custom_errors.InvalidTime):
+        if isinstance(error, errors.InvalidTime):
             await inter.send(error.message, ephemeral=True)
             return True
 

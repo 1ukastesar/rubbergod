@@ -13,8 +13,8 @@ from disnake.ext import commands
 import utils
 from cogs.base import Base
 from database.image import ImageDB
-from permissions import permission_check
 from rubbergod import Rubbergod
+from utils.checks import PermissionsCheck
 
 from . import features
 from .messages_cz import MessagesCZ
@@ -92,7 +92,7 @@ class Warden(Base, commands.Cog):
                     pass
 
     @commands.group()
-    @commands.check(permission_check.is_bot_admin)
+    @PermissionsCheck.is_bot_admin()
     async def scan(self, ctx: commands.Context):
         """Scan for reposts"""
         if ctx.invoked_subcommand is None:

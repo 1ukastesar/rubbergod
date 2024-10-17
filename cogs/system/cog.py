@@ -15,9 +15,9 @@ from cogs.base import Base
 from database.error import ErrorLogDB
 from features.error import ErrorLogger
 from features.git import Git
-from permissions import permission_check
 from rubbergod import Rubbergod
 from utils import cooldowns
+from utils.checks import PermissionsCheck
 from utils.colors import RubbergodColors
 
 from . import features
@@ -35,15 +35,8 @@ class System(Base, commands.Cog):
         self.git = Git()
 
         self.unloadable_cogs = ["system"]
-        self.check_first_boot()
 
-    def check_first_boot(self):
-        """Check if the bot is booting for the first time. If so, set the error log."""
-        start_streak, end_streak = ErrorLogDB.get_longest_streak()
-        if not start_streak:
-            ErrorLogDB.set()
-
-    @commands.check(permission_check.is_bot_admin)
+    @PermissionsCheck.is_bot_admin()
     @commands.slash_command(name="get_logs", description=MessagesCZ.get_logs_brief)
     async def get_logs(
         self,
@@ -83,7 +76,7 @@ class System(Base, commands.Cog):
 
         await inter.send(files=files)
 
-    @commands.check(permission_check.is_bot_admin)
+    @PermissionsCheck.is_bot_admin()
     @commands.slash_command(name="shutdown", description=MessagesCZ.shutdown_brief)
     async def shutdown(self, inter: disnake.ApplicationCommandInteraction):
         await inter.send("Shutting down...")
@@ -92,7 +85,7 @@ class System(Base, commands.Cog):
         await self.bot.vutapi_session.close()
         await self.bot.close()
 
-    @commands.check(permission_check.is_bot_admin)
+    @PermissionsCheck.is_bot_admin()
     @commands.slash_command(name="cogs", description=MessagesCZ.cogs_brief, guild_ids=[Base.config.guild_id])
     async def cogs(self, inter: disnake.ApplicationCommandInteraction):
         """
@@ -144,9 +137,8 @@ class System(Base, commands.Cog):
     @commands.slash_command(name="uptime", description=MessagesCZ.uptime_brief)
     async def uptime(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
-        now = datetime.now().replace(microsecond=0)
-        delta = now - boottime
-        count = self.error_log.log_error_time(set=False)
+        delta = datetime.now().replace(microsecond=0) - boottime
+        count = ErrorLogDB.days_without_error()
         embed = disnake.Embed(
             title="Uptime",
             description=f"{count} days without an accident.",
@@ -165,7 +157,7 @@ class System(Base, commands.Cog):
         await inter.edit_original_response(embed=embed)
 
     @cooldowns.default_cooldown
-    @commands.check(permission_check.is_bot_admin)
+    @PermissionsCheck.is_bot_admin()
     @commands.slash_command(name="command_checks", description=MessagesCZ.command_checks_brief)
     async def command_checks(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()

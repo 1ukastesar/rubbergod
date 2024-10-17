@@ -19,9 +19,9 @@ from database.review import SubjectDB
 from database.streamlinks import StreamLinkDB
 from features.list_message_sender import send_list_of_messages
 from features.prompt import PromptSession
-from permissions import permission_check, room_check
 from rubbergod import Rubbergod
 from utils import cooldowns
+from utils.checks import PermissionsCheck
 
 from .messages_cz import MessagesCZ
 
@@ -45,7 +45,6 @@ class StreamLinks(Base, commands.Cog):
         global subjects, subjects_with_stream
         super().__init__()
         self.bot = bot
-        self.check = room_check.RoomCheck(bot)
         subjects = SubjectDB.get_all()
         subjects_with_stream = StreamLinkDB.get_subjects_with_stream()
 
@@ -61,7 +60,7 @@ class StreamLinks(Base, commands.Cog):
     @cooldowns.default_cooldown
     @commands.slash_command(name="streamlinks", brief=MessagesCZ.streamlinks_brief)
     async def _streamlinks(self, inter: disnake.ApplicationCommandInteraction):
-        await inter.response.defer(ephemeral=self.check.botroom_check(inter))
+        await inter.response.defer(ephemeral=PermissionsCheck.is_botroom(inter))
 
     @_streamlinks.sub_command(name="get", description=MessagesCZ.streamlinks_brief)
     async def streamlinks_get(
@@ -98,14 +97,14 @@ class StreamLinks(Base, commands.Cog):
             date = stream.created_at.strftime("%d. %m. %Y")
             messages.append(f"**{stream.member_name}** ({date}) - [{stream.description}](<{stream.link}>)\n")
 
-        await send_list_of_messages(inter, messages, ephemeral=self.check.botroom_check(inter))
+        await send_list_of_messages(inter, messages, ephemeral=PermissionsCheck.is_botroom(inter))
 
     @cooldowns.default_cooldown
     @commands.slash_command(name="streamlinks_mod", brief=MessagesCZ.streamlinks_brief)
     async def _streamlinks_mod(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
 
-    @commands.check(permission_check.helper_plus)
+    @PermissionsCheck.is_helper_plus()
     @_streamlinks_mod.sub_command(name="add", description=MessagesCZ.add_brief)
     async def streamlinks_add(
         self,
@@ -143,7 +142,7 @@ class StreamLinks(Base, commands.Cog):
         )
         await inter.edit_original_response(content=MessagesCZ.add_success)
 
-    @commands.check(permission_check.helper_plus)
+    @PermissionsCheck.is_helper_plus()
     @_streamlinks_mod.sub_command(name="update", description=MessagesCZ.update_brief)
     async def streamlinks_update(
         self,
@@ -222,7 +221,7 @@ class StreamLinks(Base, commands.Cog):
         await channel.send(embed=embed)
         await inter.edit_original_response(content=MessagesCZ.update_success)
 
-    @commands.check(permission_check.helper_plus)
+    @PermissionsCheck.is_helper_plus()
     @_streamlinks_mod.sub_command(name="remove", description=MessagesCZ.remove_brief)
     async def streamlinks_remove(
         self,

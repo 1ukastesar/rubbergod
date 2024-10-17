@@ -12,8 +12,8 @@ from disnake.ext import commands
 
 from cogs.base import Base
 from config.app_config import CONFIG_PATH, config_get_keys, load_config
-from permissions import permission_check
 from rubbergod import Rubbergod
+from utils.checks import PermissionsCheck
 
 from .messages_cz import MessagesCZ
 
@@ -27,7 +27,7 @@ class DynamicConfig(Base, commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.check(permission_check.is_bot_admin)
+    @PermissionsCheck.is_bot_admin()
     @commands.slash_command(name="config")
     async def config_cmd(self, inter: disnake.ApplicationCommandInteraction):
         """
